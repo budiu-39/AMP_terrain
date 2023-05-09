@@ -2,6 +2,8 @@
 
 This is a project based on ASE from Xue bin Peng. It is my graduation project. I mainly use the AMP part from ASE project, and add my own code.
 
+Codebase: https://github.com/nv-tlabs/ASE
+
 In file ase, I add terrrain in environment. 
 In file ase_cnn, I change the structure of network and add cnn layers. But it doesn't work very well.
 
