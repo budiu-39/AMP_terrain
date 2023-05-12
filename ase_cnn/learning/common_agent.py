@@ -55,7 +55,7 @@ class CommonAgent(a2c_continuous.A2CAgent):
         a2c_common.A2CBase.__init__(self, base_name, config)  #这里完成了环境的初始化
 
         self._load_config_params(config)
-
+        self.has_env_cnn = config.get('has_env_cnn', None)
         self.is_discrete = False
         self._setup_action_space()
         self.bounds_loss_coef = config.get('bounds_loss_coef', None)
@@ -525,11 +525,12 @@ class CommonAgent(a2c_continuous.A2CAgent):
     def _eval_critic(self, obs_dict, infos_dict = None):
         self.model.eval()
         obs = obs_dict['obs']
-        infos = infos_dict['env_sensor']
-        env_sensor_output = self.model.a2c_network.eval_env(infos)
-        obs_env = torch.cat((obs, env_sensor_output), 1)
-        obs_env = self._preproc_obs(obs_env)
-        value = self.model.a2c_network.eval_critic(obs_env)
+        if self.has_env_cnn:
+            infos = infos_dict['env_sensor']
+            env_sensor_output = self.model.a2c_network.eval_env(infos)
+            obs = torch.cat((obs, env_sensor_output), 1)
+            # obs_env = self._preproc_obs(obs_env)
+        value = self.model.a2c_network.eval_critic(obs)
 
         if self.normalize_value:
             value = self.value_mean_std(value, True)

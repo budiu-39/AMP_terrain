@@ -47,8 +47,10 @@ class AMPBuilder(network_builder.A2CBuilder):   # 这里不只是加入disc，�
 
             super().__init__(params, **kwargs)
 
-            env_sensor_shape = kwargs.get('env_sensor_shape')
-            self._build_env_cnn(env_sensor_shape)  #好像输入必须要是3维的,不知道这样子可不可以(应该可以
+            self.env_sensor_shape = kwargs.get('env_sensor_shape')
+
+            if self.env_sensor_shape is not None:
+                self._build_env_cnn(self.env_sensor_shape)  #好像输入必须要是3维的,不知道这样子可不可以(应该可以
 
             if self.is_continuous:
                 if (not self.space_config['learn_sigma']):
@@ -73,21 +75,20 @@ class AMPBuilder(network_builder.A2CBuilder):   # 这里不只是加入disc，�
             # self._env_cnn_activation = params['env_cnn']['activation']
             # self._env_cnn_initializer = params['env_cnn']['initializer']
             return
-
         def forward(self, obs_dict):   # obs_dict 里面存着state？
-            if 'env_obs' in obs_dict.keys():
-                obs = obs_dict['obs']  # 这里的是所有env的，所以info也要传入所有（已经传了hhh）
-                env = obs_dict['env_obs']
-                states = obs_dict.get('rnn_states', None)
-                env = self.eval_env(env)  # 这里已经是输出1维的tensor了
-                obs_env = torch.cat((obs, env), 1)
-                actor_outputs = self.eval_actor(obs_env)  # 这里可以简单合并吗？类型是tensor 用个cat也可以
-                value = self.eval_critic(obs_env)
-            else:
-                obs = obs_dict['obs']
-                states = obs_dict.get('rnn_states', None)
-                actor_outputs = self.eval_actor(obs)  # 这里可以简单合并吗？类型是tensor
-                value = self.eval_critic(obs)
+            # if self.env_sensor_shape:
+            #     obs = obs_dict['obs']  # 这里的是所有env的，所以info也要传入所有（已经传了hhh）
+            #     env = obs_dict['env_obs']
+            #     states = obs_dict.get('rnn_states', None)
+            #     env = self.eval_env(env)  # 这里已经是输出1维的tensor了
+            #     obs_env = torch.cat((obs, env), 1)
+            #     actor_outputs = self.eval_actor(obs_env)  # 这里可以简单合并吗？类型是tensor 用个cat也可以
+            #     value = self.eval_critic(obs_env)
+            # else:
+            obs = obs_dict['obs']
+            states = obs_dict.get('rnn_states', None)
+            actor_outputs = self.eval_actor(obs)  # 这里可以简单合并吗？类型是tensor
+            value = self.eval_critic(obs)
 
             output = actor_outputs + (value, states)  #输出去了哪里？ 这个是最先的步骤，前向传播后得到s用来更新critic
 

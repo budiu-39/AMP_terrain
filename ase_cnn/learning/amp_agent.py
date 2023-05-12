@@ -203,6 +203,10 @@ class AMPAgent(common_agent.CommonAgent):
             # obs_env = torch.cat((obs_dict['obs'], env_out), 1)
             # obs_env = self._preproc_obs(obs_env)
             # input_dict['obs'] = obs_env
+            if self.has_env_cnn:
+                env = self._eval_env(input_dict['env_obs'])
+                obs_input = torch.cat((input_dict['obs'], env), 1)
+                input_dict['obs'] = self._preproc_obs(obs_input)
             res_dict = self.model(input_dict)  #这个就是result_dic 吧！
             if self.has_central_value:
                 states = obs_dict['states']
@@ -376,6 +380,10 @@ class AMPAgent(common_agent.CommonAgent):
             batch_dict['seq_length'] = self.seq_len
 
         with torch.cuda.amp.autocast(enabled=self.mixed_precision):  #混合精度训练
+            if self.has_env_cnn:
+                env = self._eval_env(batch_dict['env_obs'])
+                obs_input = torch.cat((obs_batch, env), 1)
+                batch_dict['obs'] = self._preproc_obs(obs_input)
             res_dict = self.model(batch_dict)   #这里应该是forward？  result_dict   输入是obs_dict 输出是res_dict
             action_log_probs = res_dict['prev_neglogp']
             values = res_dict['values']
@@ -490,9 +498,9 @@ class AMPAgent(common_agent.CommonAgent):
     def _build_net_config(self):
         config = super()._build_net_config()
         config['amp_input_shape'] = self._amp_observation_space.shape
-        config['env_sensor_shape'] = self.env_sensor_space.shape
         obs_shape = torch_ext.shape_whc_to_cwh(self.obs_shape)
-        if config['env_sensor_shape']:
+        if self.has_env_cnn:
+            config['env_sensor_shape'] = self.env_sensor_space.shape
             config['input_shape'] = tuple([self.observation_space.shape[0] + 64])
         else:
             config['input_shape'] = obs_shape
@@ -636,6 +644,9 @@ class AMPAgent(common_agent.CommonAgent):
     def _eval_disc(self, amp_obs):
         proc_amp_obs = self._preproc_amp_obs(amp_obs)
         return self.model.a2c_network.eval_disc(proc_amp_obs)
+
+    def _eval_env(self, env_obs):
+        return self.model.a2c_network.eval_env(env_obs)
     
     def _calc_advs(self, batch_dict):  #acvtanges就是，优势值 q-v
         returns = batch_dict['returns']
