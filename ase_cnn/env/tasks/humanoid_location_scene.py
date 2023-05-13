@@ -349,8 +349,10 @@ class HumanoidLocationScene(humanoid_amp_task.HumanoidAMPTask):
         # root_rot = torch.zeros([num_envs, 4], device=self.device) + torch.tensor([0, 1, 0, 1],device=self.device)
         # x = random.randint(10,90)
         # y = random.randint(10,90)
-        x =  random.randrange(20,50,15)
-        y =  random.randrange(20,50,15)
+        # x =  random.randrange(20,50,15)
+        # y =  random.randrange(20,50,15)
+        x = 20
+        y = 50
         root_pos[:,0] = x * self._horizontal_scale
         root_pos[:,1] = y * self._horizontal_scale
         root_pos[:,2] = self.obs_heightfield[x, y] * self._vertical_scale + 0.89

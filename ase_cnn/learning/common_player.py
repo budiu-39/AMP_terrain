@@ -39,7 +39,7 @@ class CommonPlayer(players.PpoPlayerContinuous):
     def __init__(self, config):
         BasePlayer.__init__(self, config)
         self.network = config['network']
-        
+        self.has_env_cnn = config.get('has_env_cnn', None)
         self._setup_action_space()
         self.mask = [False]
 
@@ -174,6 +174,10 @@ class CommonPlayer(players.PpoPlayerContinuous):
             'rnn_states' : self.states
         }
         with torch.no_grad():
+            if self.has_env_cnn:
+                env = self._eval_env(input_dict['env_obs'])
+                obs_input = torch.cat((input_dict['obs'], env), 1)
+                input_dict['obs'] = self._preproc_obs(obs_input)
             res_dict = self.model(input_dict)
         mu = res_dict['mus']
         action = res_dict['actions']
@@ -230,6 +234,9 @@ class CommonPlayer(players.PpoPlayerContinuous):
 
     def _post_step(self, info):
         return
+
+    def _eval_env(self, env_obs):
+        return self.model.a2c_network.eval_env(env_obs)
 
     def _build_net_config(self):
         obs_shape = torch_ext.shape_whc_to_cwh(self.obs_shape)
