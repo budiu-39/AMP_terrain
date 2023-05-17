@@ -1,0 +1,28 @@
+{
+    "source_motion": "poselib/cmu/83_32_motion.npy",
+    "target_motion_path": "data/motions/83_32_motion.npy",
+    "source_tpose": "data/assets/mjcf/83_32_tpose.npy",
+    "target_tpose": "poselib/data/amp_humanoid_tpose.npy",
+    "joint_mapping": {
+         "root": "pelvis",
+         "lfemur": "left_thigh",
+         "ltibia": "left_shin",
+         "lfoot": "left_foot",
+         "rfemur": "right_thigh",
+         "rtibia": "right_shin",
+         "rfoot": "right_foot",
+         "upperback": "torso",
+         "head": "head",
+         "lhumerus": "left_upper_arm",
+         "lradius": "left_lower_arm",
+         "lwrist": "left_hand",
+         "rhumerus": "right_upper_arm",
+         "rradius": "right_lower_arm",
+         "rwrist": "right_hand"
+    },
+    "rotation":[0.7071068, 0, 0 , 0.7071068],
+    "scale": 0.056444,
+	"root_height_offset": 0.05,
+	"trim_frame_beg": -1,
+	"trim_frame_end": -1
+}

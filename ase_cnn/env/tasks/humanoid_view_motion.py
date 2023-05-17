@@ -29,8 +29,13 @@
 import torch
 
 from isaacgym import gymtorch
+import numpy as np
 
 from env.tasks.humanoid_amp import HumanoidAMP
+from isaacgym import gymtorch
+from isaacgym.terrain_utils import *
+from scipy.spatial.transform import Rotation as R
+from isaacgym.torch_utils import *
 
 
 class HumanoidViewMotion(HumanoidAMP):
@@ -51,7 +56,7 @@ class HumanoidViewMotion(HumanoidAMP):
         num_motions = self._motion_lib.num_motions()
         self._motion_ids = torch.arange(self.num_envs, device=self.device, dtype=torch.long)
         self._motion_ids = torch.remainder(self._motion_ids, num_motions)
-
+        self.create_terrains()
         return
 
     def pre_physics_step(self, actions):
@@ -61,11 +66,46 @@ class HumanoidViewMotion(HumanoidAMP):
         self.gym.set_dof_actuation_force_tensor(self.sim, force_tensor)
         return
 
+    def create_terrains(self):
+        self._num_terrains = self.num_envs
+        num_per_row = np.sqrt(self.num_envs)
+
+        terrain_width = 10.
+        terrain_length = 10.
+
+        horizontal_scale = 0.04  # [m]
+        self._horizontal_scale = horizontal_scale
+        vertical_scale = 0.02  # [m]
+        self._vertical_scale = vertical_scale
+        num_rows = int(terrain_width / horizontal_scale)  # 高度图为的数组为num_row*num_cols  保存在terrain里面， 乘horizontal_scale以后是真实的大小
+        num_cols = int(terrain_length / horizontal_scale)  # vertical_scale是高度的比例，其中terrain生成函数里面的输入就是真实的大小，如果scale（像素的）的大小比真实大小还大就会发生用斜坡补充的情况
+        def new_sub_terrain():  return SubTerrain(width=num_rows, length=num_cols, vertical_scale=vertical_scale,
+                                                 horizontal_scale=horizontal_scale)
+
+        self.obs_heightfield = self.stage_stairs_terrain(new_sub_terrain(), step_width=0.32, step_height=0.16)  # 这个用来作网络输入
+        self.heightfield = np.zeros((int(num_per_row) * num_rows, (int(self._num_terrains/int(num_per_row))+1) * num_cols))  # 这个用来记录环境的大env
+        self.obs_heightfield_cuda = torch.tensor(self.obs_heightfield, device=self.device)
+        for i in range(int(num_per_row)):
+            for j in range(int(self._num_terrains/int(num_per_row))+1):
+                self.heightfield[i * num_rows: (i+1) * num_rows, j * num_cols: (j+1) * num_cols] =  self.obs_heightfield
+        vertices, triangles = convert_heightfield_to_trimesh(self.heightfield, horizontal_scale=horizontal_scale,
+                                                             vertical_scale=vertical_scale, slope_threshold=1.5)
+        tm_params = gymapi.TriangleMeshParams()
+        tm_params.nb_vertices = vertices.shape[0]
+        tm_params.nb_triangles = triangles.shape[0]
+        tm_params.transform.p.x = 0
+        tm_params.transform.p.y = 0
+        tm_params.transform.p.z = -0.01
+        self.gym.add_triangle_mesh(self.sim, vertices.flatten(), triangles.flatten(), tm_params)
+        return
+
+
     def post_physics_step(self):
         super().post_physics_step()
         self._motion_sync()
         return
-    
+
+
     def _get_humanoid_collision_filter(self):
         return 1 # disable self collisions
 

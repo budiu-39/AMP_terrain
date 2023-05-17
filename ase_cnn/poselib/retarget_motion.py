@@ -34,6 +34,7 @@ import numpy as np
 from poselib.core.rotation3d import *
 from poselib.skeleton.skeleton3d import SkeletonTree, SkeletonState, SkeletonMotion
 from poselib.visualization.common import plot_skeleton_state, plot_skeleton_motion_interactive
+from scipy.spatial.transform import Rotation as R
 
 """
 This scripts shows how to retarget a motion clip from the source skeleton to a target skeleton.
@@ -205,7 +206,7 @@ def project_joints(motion):
 
 def main():
     # load retarget config
-    retarget_data_path = "data/configs/retarget_cmu_to_amp.json"
+    retarget_data_path = "poselib/data/configs/retarget_smpl_to_amp.json"
     with open(retarget_data_path) as f:
         retarget_data = json.load(f)
 
@@ -226,7 +227,8 @@ def main():
     # parse data from retarget config
     joint_mapping = retarget_data["joint_mapping"]
     rotation_to_target_skeleton = torch.tensor(retarget_data["rotation"])
-
+    # rotation_to_target_skeleton = torch.tensor(R.from_euler('xyz',(90,0,90), degrees = True).as_quat())
+    print(R.from_quat(rotation_to_target_skeleton).as_euler('xyz'))
     # run retargeting
     target_motion = source_motion.retarget_to_by_tpose(
       joint_mapping=retarget_data["joint_mapping"],
@@ -249,7 +251,9 @@ def main():
     root_translation = target_motion.root_translation
     local_rotation = local_rotation[frame_beg:frame_end, ...]
     root_translation = root_translation[frame_beg:frame_end, ...]
-      
+    root_translation_offset = torch.tensor([0,0,0]) - root_translation[0]
+    root_translation = root_translation + root_translation_offset
+    root_translation = root_translation + torch.tensor([5,10,0])
     new_sk_state = SkeletonState.from_rotation_and_root_translation(target_motion.skeleton_tree, local_rotation, root_translation, is_local=True)
     target_motion = SkeletonMotion.from_skeleton_state(new_sk_state, fps=target_motion.fps)
 

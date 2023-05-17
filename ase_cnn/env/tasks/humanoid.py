@@ -474,8 +474,8 @@ class Humanoid(BaseTask):
         return
 
     def render(self, sync_frame_time=False):
-        # if self.viewer:
-        #     self._update_camera()
+        if self.viewer:
+            self._update_camera()
         pass
 
         super().render(sync_frame_time)
@@ -529,14 +529,15 @@ class Humanoid(BaseTask):
         char_root_pos = self._humanoid_root_states[0, 0:3].cpu().numpy()
         
         cam_trans = self.gym.get_viewer_camera_transform(self.viewer, None)
-        cam_pos = np.array([cam_trans.p.x, cam_trans.p.y, cam_trans.p.z])
-        cam_delta = cam_pos - self._cam_prev_char_pos
+        # cam_pos = np.array([cam_trans.p.x, cam_trans.p.y, cam_trans.p.z])
+
+        # cam_delta = cam_pos - self._cam_prev_char_pos
 
         new_cam_target = gymapi.Vec3(char_root_pos[0], char_root_pos[1], 1.0)
-        new_cam_pos = gymapi.Vec3(char_root_pos[0] + cam_delta[0], 
-                                  char_root_pos[1] + cam_delta[1], 
-                                  cam_pos[2])
-
+        # new_cam_pos = gymapi.Vec3(char_root_pos[0] + cam_delta[0],
+        #                           char_root_pos[1] + cam_delta[1],
+        #                           cam_pos[2])
+        new_cam_pos = gymapi.Vec3(-5,10,3)
         self.gym.viewer_camera_look_at(self.viewer, None, new_cam_pos, new_cam_target)
 
         self._cam_prev_char_pos[:] = char_root_pos

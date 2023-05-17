@@ -70,7 +70,7 @@ params:
     mixed_precision: False
     normalize_input: False
     normalize_value: True
-    has_env_cnn: True
+    has_env_cnn: False
     reward_shaper:
       scale_value: 1
     normalize_advantage: True

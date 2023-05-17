@@ -25,8 +25,10 @@ env:
   tarDistMax: 10.0
   enableTaskObs: True
 
+  num_env_sensor: [40, 40, 1]
+
   asset:
-    assetRoot: "ase/data/assets"
+    assetRoot: "data/assets"
     assetScene: "/terrain"
     assetFileName: "mjcf/amp_humanoid.xml"
 

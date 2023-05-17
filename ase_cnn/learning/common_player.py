@@ -98,7 +98,10 @@ class CommonPlayer(players.PpoPlayerContinuous):
                     masks = self.env.get_action_mask()
                     action = self.get_masked_action(obs_dict, masks, is_determenistic)
                 else:
-                    action = self.get_action(obs_dict, infos['env_sensor'], is_determenistic)
+                    if 'env_sensor' in infos.keys():
+                        action = self.get_action(obs_dict, infos['env_sensor'], is_determenistic)
+                    else:
+                        action = self.get_action(obs_dict,is_determenistic)
                 obs_dict, r, done, info =  self.env_step(self.env, action)
                 cr += r
                 steps += 1
@@ -162,7 +165,7 @@ class CommonPlayer(players.PpoPlayerContinuous):
         }
         return obs_dict
 
-    def get_action(self, obs_dict, env_sensor_dict = None , is_determenistic = False):
+    def get_action(self, obs_dict, is_determenistic = False,env_sensor_dict = None ):
         # if self.has_batch_dimension == False:
         #     obs = unsqueeze_obs(obs)
         # obs = self._preproc_obs(obs)

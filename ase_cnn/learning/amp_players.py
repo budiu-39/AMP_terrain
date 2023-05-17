@@ -72,7 +72,7 @@ class AMPPlayerContinuous(common_player.CommonPlayer):
         else:
             config['amp_input_shape'] = self.env_info['amp_observation_space']
             config['amp_input_shape'] = self.env_info['env_sensor_space']
-        if config['env_sensor_shape']:
+        if self.has_env_cnn:
             config['input_shape'] = [self.observation_space.shape[0] + 64]
         return config
 

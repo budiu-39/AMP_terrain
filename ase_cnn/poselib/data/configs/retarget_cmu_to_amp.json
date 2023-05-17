@@ -1,8 +1,8 @@
 {
-    "source_motion": "data/01_01_cmu.npy",
+    "source_motion": "poselib/data/01_01_cmu.npy",
     "target_motion_path": "data/01_01_cmu_amp.npy",
-    "source_tpose": "data/cmu_tpose.npy",
-    "target_tpose": "data/amp_humanoid_tpose.npy",
+    "source_tpose": "poselib/data/cmu_tpose.npy",
+    "target_tpose": "poselib/data/amp_humanoid_tpose.npy",
     "joint_mapping": {
          "Hips": "pelvis",
          "LeftUpLeg": "left_thigh",
@@ -20,7 +20,7 @@
          "RightForeArm": "right_lower_arm",
          "RightHand": "right_hand"
     },
-    "rotation": [0, 0, 0.7071068, 0.7071068],
+    "rotation": [0.5,0.5,0.5,0.5],
     "scale": 0.056444,
 	"root_height_offset": 0.05,
 	"trim_frame_beg": 75,

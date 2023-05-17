@@ -458,7 +458,7 @@ def euclidean_inverse(x):
     return s
 
 
-@torch.jit.script
+# @torch.jit.script
 def euclidean_to_transform(transformation_matrix):
     """
     Construct a transform from a Euclidean transformation matrix

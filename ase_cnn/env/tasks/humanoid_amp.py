@@ -37,6 +37,9 @@ from env.tasks.humanoid import Humanoid, dof_to_obs
 from utils import gym_util
 from utils.motion_lib import MotionLib
 from isaacgym.torch_utils import *
+from isaacgym.terrain_utils import *
+
+
 
 from utils import torch_utils
 
@@ -53,7 +56,7 @@ class HumanoidAMP(Humanoid):
         self._hybrid_init_prob = cfg["env"]["hybridInitProb"]
         self._num_amp_obs_steps = cfg["env"]["numAMPObsSteps"]  #这里就是amp_的obs了！！看看他关注了几步
         assert(self._num_amp_obs_steps >= 2)
-
+        self.num_env_sensor = cfg["env"]["num_env_sensor"]
         self._reset_default_env_ids = []
         self._reset_ref_env_ids = []
 
@@ -72,6 +75,7 @@ class HumanoidAMP(Humanoid):
         self._hist_amp_obs_buf = self._amp_obs_buf[:, 1:]
         
         self._amp_obs_demo_buf = None
+        self.create_terrains()
 
         return
 
@@ -85,6 +89,8 @@ class HumanoidAMP(Humanoid):
         self.extras["amp_obs"] = amp_obs_flat
 
         return
+    def get_num_env_sensor(self):
+        return self.num_env_sensor
 
     def get_num_amp_obs(self):
         return self._num_amp_obs_steps * self._num_amp_obs_per_step
@@ -226,6 +232,71 @@ class HumanoidAMP(Humanoid):
         if (len(default_reset_ids) > 0):
             self._reset_default(default_reset_ids)
 
+        return
+
+    def stage_stairs_terrain(self, terrain, step_width, step_height, platform_size=1.):
+        """
+        Generate stairs
+
+        Parameters:
+            terrain (terrain): the terrain
+            step_width (float):  the width of the step [meters]
+            step_height (float): the step_height [meters]
+            platform_size (float): size of the flat platform at the center of the terrain [meters]
+        Returns:
+            terrain (SubTerrain): update terrain
+        """
+        # switch parameters to discrete units
+        step_width = int(step_width / terrain.horizontal_scale)
+        step_height = int(step_height / terrain.vertical_scale)
+        platform_size = int(platform_size / terrain.horizontal_scale)
+
+        height = 0
+        start_x = int(1.5 / terrain.horizontal_scale)
+        stop_x = terrain.width - start_x
+        start_y = int(1.5 / terrain.horizontal_scale)
+        stop_y = terrain.length - start_y
+        stair_num = 3
+        for i in np.arange(stair_num):
+            start_x += step_width
+            stop_x -= step_width
+            start_y += step_width
+            stop_y -= step_width
+            height += step_height
+            terrain.height_field_raw[start_x: stop_x, start_y: stop_y] = height
+        return terrain.height_field_raw
+
+    def create_terrains(self):
+        self._num_terrains = self.num_envs
+        num_per_row = np.sqrt(self.num_envs)
+
+        terrain_width = 10.
+        terrain_length = 10.
+
+        horizontal_scale = 0.04  # [m]
+        self._horizontal_scale = horizontal_scale
+        vertical_scale = 0.02  # [m]
+        self._vertical_scale = vertical_scale
+        num_rows = int(terrain_width / horizontal_scale)  # 高度图为的数组为num_row*num_cols  保存在terrain里面， 乘horizontal_scale以后是真实的大小
+        num_cols = int(terrain_length / horizontal_scale)  # vertical_scale是高度的比例，其中terrain生成函数里面的输入就是真实的大小，如果scale（像素的）的大小比真实大小还大就会发生用斜坡补充的情况
+        def new_sub_terrain():  return SubTerrain(width=num_rows, length=num_cols, vertical_scale=vertical_scale,
+                                                 horizontal_scale=horizontal_scale)
+
+        self.obs_heightfield = self.stage_stairs_terrain(new_sub_terrain(), step_width=0.32, step_height=0.16)  # 这个用来作网络输入
+        self.heightfield = np.zeros((int(num_per_row) * num_rows, (int(self._num_terrains/int(num_per_row))+1) * num_cols))  # 这个用来记录环境的大env
+        self.obs_heightfield_cuda = torch.tensor(self.obs_heightfield, device=self.device)
+        for i in range(int(num_per_row)):
+            for j in range(int(self._num_terrains/int(num_per_row))+1):
+                self.heightfield[i * num_rows: (i+1) * num_rows, j * num_cols: (j+1) * num_cols] =  self.obs_heightfield
+        vertices, triangles = convert_heightfield_to_trimesh(self.heightfield, horizontal_scale=horizontal_scale,
+                                                             vertical_scale=vertical_scale, slope_threshold=1.5)
+        tm_params = gymapi.TriangleMeshParams()
+        tm_params.nb_vertices = vertices.shape[0]
+        tm_params.nb_triangles = triangles.shape[0]
+        tm_params.transform.p.x = 0
+        tm_params.transform.p.y = 0
+        tm_params.transform.p.z = -0.01
+        self.gym.add_triangle_mesh(self.sim, vertices.flatten(), triangles.flatten(), tm_params)
         return
 
     def _init_amp_obs(self, env_ids):

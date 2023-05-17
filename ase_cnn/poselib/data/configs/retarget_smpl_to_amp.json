@@ -1,0 +1,28 @@
+{
+    "source_motion": "poselib/data/cmu_smpl/smpl_motion.npy",
+    "target_motion_path": "data/motions/AMASS/cmu_up_stair.npy",
+    "source_tpose": "poselib/data/tpose/smpl_tpose.npy",
+    "target_tpose": "poselib/data/tpose/amp_humanoid_tpose.npy",
+    "joint_mapping": {
+        "Pelvis": "pelvis",
+        "L_Hip": "left_thigh",
+        "L_Knee": "left_shin",
+        "L_Ankle": "left_foot",
+        "R_Hip": "right_thigh",
+        "R_Knee": "right_shin",
+        "R_Ankle": "right_foot",
+        "Torso": "torso",
+        "Neck": "head",
+        "L_Shoulder": "left_upper_arm",
+        "L_Elbow": "left_lower_arm",
+        "L_Wrist": "left_hand",
+        "R_Shoulder": "right_upper_arm",
+        "R_Elbow": "right_lower_arm",
+        "R_Wrist": "right_hand"
+    },
+    "rotation":    [0.5,0.5,0.5,0.5],
+    "scale": 1,
+	"root_height_offset": 0.05,
+	"trim_frame_beg": 160,
+	"trim_frame_end": 930
+}

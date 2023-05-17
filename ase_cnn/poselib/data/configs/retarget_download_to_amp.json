@@ -1,0 +1,28 @@
+{
+    "source_motion": "data/up_stair.npy",
+    "target_motion_path": "data/up_stair_amp.npy",
+    "source_tpose": "data/download_tpose.npy",
+    "target_tpose": "data/amp_humanoid_tpose.npy",
+    "joint_mapping": {
+         "pelvis": "pelvis",
+         "thigh_l": "left_thigh",
+         "calf_l": "left_shin",
+         "foot_l": "left_foot",
+         "thigh_r": "right_thigh",
+         "calf_r": "right_shin",
+         "foot_r": "right_foot",
+         "spine_01": "torso",
+         "head": "head",
+         "upperarm_l": "left_upper_arm",
+         "lowerarm_l": "left_lower_arm",
+         "hand_l": "left_hand",
+         "upperarm_r": "right_upper_arm",
+         "lowerarm_r": "right_lower_arm",
+         "hand_r": "right_hand"
+    },
+    "rotation": [-0.5, 0.5, -0.5, 0.5],
+    "scale": 0.056444,
+	"root_height_offset": 0.05,
+	"trim_frame_beg": -1,
+	"trim_frame_end": -1
+}
